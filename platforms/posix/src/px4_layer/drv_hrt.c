@@ -188,7 +188,7 @@ int hrt_set_absolute_time_offset(int32_t time_diff_us)
 /*
  * Get absolute time.
  */
-hrt_abstime hrt_absolute_time(void)
+hrt_abstime hrt_absolute_time(void)//gps的绝对时间
 {
 	pthread_mutex_lock(&_hrt_mutex);
 

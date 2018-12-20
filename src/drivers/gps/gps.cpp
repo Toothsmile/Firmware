@@ -49,7 +49,7 @@
 #endif
 
 
-#include <fcntl.h>
+#include <fcntl.h>//open 串口
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdint.h>
@@ -64,7 +64,7 @@
 #include <unistd.h>
 #include <px4_config.h>
 #include <px4_getopt.h>
-#include <px4_module.h>
+#include <px4_module.h>//这个模板类调用GPS类的函数
 #include <px4_tasks.h>
 #include <px4_time.h>
 #include <arch/board/board.h>
@@ -84,6 +84,7 @@
 #include "devices/src/ubx.h"
 #include "devices/src/mtk.h"
 #include "devices/src/ashtech.h"
+#include "devices/src/ubx_rec.h"
 
 
 #define TIMEOUT_5HZ 500
@@ -97,12 +98,12 @@ struct GPS_Sat_Info {
 };
 
 
-class GPS : public ModuleBase<GPS>
+class GPS : public ModuleBase<GPS>//这个声明指的就是调用模板类
 {
 public:
 
 	/** The GPS allows to run multiple instances */
-	enum class Instance : uint8_t {
+    enum class Instance : uint8_t {//Gps的个数
 		Main = 0,
 		Secondary,
 
@@ -110,14 +111,16 @@ public:
 	};
 
 	GPS(const char *path, gps_driver_mode_t mode, GPSHelper::Interface interface, bool fake_gps, bool enable_sat_info,
-	    Instance instance);
+        Instance instance);/*path:串口号 mode为：drv_gps.h定义的数据类型（ubx，MTK,ATH）,interface为UART or SPI 由gps_helper.h
+                           fake_gps: 大概是测试gps函数是否正常使用，enable_sat_info 是否打印卫星信息；instance：使用的gps实例名称
+                            */
 	virtual ~GPS();
 
 	/** @see ModuleBase */
-	static int task_spawn(int argc, char *argv[]);
+    static int task_spawn(int argc, char *argv[]);//任务，模板中函数的mian直接调用
 
 	/** spawn task and select the instance */
-	static int task_spawn(int argc, char *argv[], Instance instance);
+    static int task_spawn(int argc, char *argv[], Instance instance);//被task_spawn调用
 
 	/** @see ModuleBase */
 	static GPS *instantiate(int argc, char *argv[]);
@@ -152,23 +155,23 @@ private:
 	bool				_baudrate_changed;				///< flag to signal that the baudrate with the GPS has changed
 	bool				_mode_changed;					///< flag that the GPS mode has changed
 	bool        			_mode_auto;					///< if true, auto-detect which GPS is attached
-	gps_driver_mode_t		_mode;						///< current mode
+    gps_driver_mode_t		_mode;						///< current mode
 	GPSHelper::Interface  _interface;   						///< interface
-	GPSHelper			*_helper;					///< instance of GPS parser
+    GPSHelper			*_helper;					///< instance of GPS parser gps解析器实例
 	GPS_Sat_Info			*_sat_info;					///< instance of GPS sat info data object
 	struct vehicle_gps_position_s	_report_gps_pos;				///< uORB topic for gps position
 	orb_advert_t			_report_gps_pos_pub;				///< uORB pub for gps position
-	int					_gps_orb_instance;				///< uORB multi-topic instance
+    int					_gps_orb_instance;				///< uORB multi-topic instance
 	struct satellite_info_s		*_p_report_sat_info;				///< pointer to uORB topic for satellite info
 	int					_gps_sat_orb_instance;				///< uORB multi-topic instance for satellite info
 	orb_advert_t			_report_sat_info_pub;				///< uORB pub for satellite info
-	float				_rate;						///< position update rate
+    float				_rate;						///< position update rate
 	float				_rate_rtcm_injection;				///< RTCM message injection rate
 	unsigned			_last_rate_rtcm_injection_count; 		///< counter for number of RTCM messages
 	bool				_fake_gps;					///< fake gps output
-	Instance 			_instance;
+    Instance 			_instance;                  /// gps 实例
 
-	int _orb_inject_data_fd;
+    int _orb_inject_data_fd;                        ///
 
 	orb_advert_t _dump_communication_pub;			///< if non-null, dump communication
 	gps_dump_s *_dump_to_device;
@@ -226,7 +229,7 @@ private:
 	 * @param data
 	 * @param len
 	 */
-	inline bool injectData(uint8_t *data, size_t len);
+    inline bool injectData(uint8_t *data, size_t len);//注入数据 inline
 
 	/**
 	 * set the Baudrate
@@ -551,7 +554,7 @@ int GPS::setBaudrate(unsigned baud)
 	return 0;
 }
 
-void GPS::initializeCommunicationDump()
+void GPS::initializeCommunicationDump()//初始化连接
 {
 	param_t gps_dump_comm_ph = param_find("GPS_DUMP_COMM");
 	int32_t param_dump_comm;
@@ -572,7 +575,7 @@ void GPS::initializeCommunicationDump()
 		return;
 	}
 
-	memset(_dump_to_device, 0, sizeof(gps_dump_s));
+    memset(_dump_to_device, 0, sizeof(gps_dump_s));//meset 给内存赋值函数
 	memset(_dump_from_device, 0, sizeof(gps_dump_s));
 
 	int instance;
@@ -617,9 +620,9 @@ void GPS::dumpGpsData(uint8_t *data, size_t len, bool msg_to_gps_device)
 void
 GPS::run()
 {
-	if (!_fake_gps) {
+    if (!_fake_gps) {//变量fake_gps 是否开启
 		/* open the serial port */
-		_serial_fd = ::open(_port, O_RDWR | O_NOCTTY);
+        _serial_fd = ::open(_port, O_RDWR | O_NOCTTY);//：：前为空格，即为调用的全局函数 打开串口并返回执行结果
 
 		if (_serial_fd < 0) {
 			PX4_ERR("GPS: failed to open serial port: %s err: %d", _port, errno);
@@ -627,11 +630,12 @@ GPS::run()
 		}
 	}
 
-	_orb_inject_data_fd = orb_subscribe(ORB_ID(gps_inject_data));
+    _orb_inject_data_fd = orb_subscribe(ORB_ID(gps_inject_data));//订阅注入的gps数据
 
-	initializeCommunicationDump();
+    initializeCommunicationDump();//初始化连接
 
-	uint64_t last_rate_measurement = hrt_absolute_time();
+    uint64_t last_rate_measurement = hrt_absolute_time();//gps的绝对时间
+
 	unsigned last_rate_count = 0;
 
 	/* loop handling received serial bytes and also configuring in between */
@@ -673,17 +677,17 @@ GPS::run()
 				_helper = nullptr;
 			}
 
-			switch (_mode) {
+            switch (_mode) {//在这里增加moudle
 			case GPS_DRIVER_MODE_NONE:
 				_mode = GPS_DRIVER_MODE_UBX;
 
 			/* FALLTHROUGH */
 			case GPS_DRIVER_MODE_UBX: {
-					int32_t param_gps_ubx_dynmodel = 7; // default to 7: airborne with <2g acceleration
+                    int32_t param_gps_ubx_dynmodel = 7; // default to 7: airborne with <2g acceleration
 					param_get(param_find("GPS_UBX_DYNMODEL"), &param_gps_ubx_dynmodel);
 
 					_helper = new GPSDriverUBX(_interface, &GPS::callback, this, &_report_gps_pos, _p_report_sat_info,
-								   param_gps_ubx_dynmodel);
+                                   param_gps_ubx_dynmodel);//讲gpshelp实例化
 				}
 				break;
 
@@ -694,7 +698,10 @@ GPS::run()
 			case GPS_DRIVER_MODE_ASHTECH:
 				_helper = new GPSDriverAshtech(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info);
 				break;
-
+            case GPS_DRIVER_MODE_UBX_REC:// by viga
+                _helper = new GPSDriverUBX_rec(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info);
+                PX4_INFO("used UBX_REC SUCCEED");
+                break;
 			default:
 				break;
 			}
@@ -704,12 +711,12 @@ GPS::run()
 			 * MTK driver is not well tested, so we really only trust the UBX
 			 * driver for an advance publication
 			 */
-			if (_helper && _helper->configure(_baudrate, GPSHelper::OutputMode::GPS) == 0) {
+            if (_helper && _helper->configure(_baudrate, GPSHelper::OutputMode::GPS) == 0) {//config 设置波特率与输出
 
 				/* reset report */
 				memset(&_report_gps_pos, 0, sizeof(_report_gps_pos));
 
-				if (_mode == GPS_DRIVER_MODE_UBX) {
+                if (_mode == GPS_DRIVER_MODE_UBX_REC) { // 可以增加一个时间
 
 					/* GPS is obviously detected successfully, reset statistics */
 					_helper->resetUpdateRates();
@@ -785,10 +792,13 @@ GPS::run()
 					break;
 
 				case GPS_DRIVER_MODE_ASHTECH:
-					_mode = GPS_DRIVER_MODE_UBX;
-					usleep(500000); // tried all possible drivers. Wait a bit before next round
+                    _mode = GPS_DRIVER_MODE_UBX_REC;
+//					usleep(500000); // tried all possible drivers. Wait a bit before next round
 					break;
-
+                case GPS_DRIVER_MODE_UBX_REC:
+                    _mode=GPS_DRIVER_MODE_UBX;
+                    usleep(500000); // tried all possible drivers. Wait a bit before next round
+                    break;
 				default:
 					break;
 				}
@@ -971,13 +981,13 @@ int GPS::task_spawn(int argc, char *argv[])
 	return task_spawn(argc, argv, Instance::Main);
 }
 
-int GPS::task_spawn(int argc, char *argv[], Instance instance)
+int GPS::task_spawn(int argc, char *argv[], Instance instance)//这个就是gps start调用的主函数（只有一个GPS的时候）
 {
-	px4_main_t entry_point;
+    px4_main_t entry_point;//typedef int (*px4_main_t)(int argc, char *argv[])是一个指针函数
 	if (instance == Instance::Main) {
-		entry_point = (px4_main_t)&run_trampoline;
+        entry_point = (px4_main_t)&run_trampoline;//将参数传回模板类 模板类再指向GPS::run
 	} else {
-		entry_point = (px4_main_t)&run_trampoline_secondary;
+        entry_point = (px4_main_t)&run_trampoline_secondary;
 	}
 
 	int task_id = px4_task_spawn_cmd("gps", SCHED_DEFAULT,
@@ -1017,7 +1027,7 @@ int GPS::run_trampoline_secondary(int argc, char *argv[])
 }
 GPS *GPS::instantiate(int argc, char *argv[])
 {
-	return instantiate(argc, argv, Instance::Main);
+    return instantiate(argc, argv, Instance::Main);//如果只有一个GPS将第三个参数赋值为Main
 }
 
 GPS *GPS::instantiate(int argc, char *argv[], Instance instance)

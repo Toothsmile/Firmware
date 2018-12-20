@@ -159,11 +159,11 @@ public:
 		argv += 1;
 #endif
 
-		_object = T::instantiate(argc, argv);
+                _object = T::instantiate(argc, argv);//GPS  再次调用GPS的instantiate
 
 		if (_object) {
-			T *object = (T *)_object;
-			object->run();
+                        T *object = (T *)_object;//T类型的指针指向T类中函数的地址
+                        object->run();//类指针的成员提取
 
 		} else {
 			PX4_ERR("failed to instantiate object");
