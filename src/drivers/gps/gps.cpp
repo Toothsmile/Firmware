@@ -875,7 +875,9 @@ GPS::print_status()
 		case GPS_DRIVER_MODE_ASHTECH:
 			PX4_INFO("protocol: ASHTECH");
 			break;
-
+        case GPS_DRIVER_MODE_UBX_REC:
+            PX4_INFO("protocol: UBX_REC");
+            break;
 		default:
 			break;
 		}
