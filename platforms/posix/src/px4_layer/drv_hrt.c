@@ -74,7 +74,7 @@ static int32_t dsp_offset = 0;
 static hrt_abstime _start_delay_time = 0;
 static hrt_abstime _delay_interval = 0;
 static hrt_abstime max_time = 0;
-pthread_mutex_t _hrt_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t  _hrt_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void
 hrt_call_invoke(void);

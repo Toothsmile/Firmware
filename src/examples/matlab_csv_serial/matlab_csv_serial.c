@@ -61,7 +61,9 @@
 #include <perf/perf_counter.h>
 #include <systemlib/err.h>
 #include <poll.h>
-
+//by sjj
+#include<px4_tasks.h>
+#include <uORB/topics/vehicle_local_position.h>
 __EXPORT int matlab_csv_serial_main(int argc, char *argv[]);
 static bool thread_should_exit = false;		/**< Daemon exit flag */
 static bool thread_running = false;		/**< Daemon status flag */
@@ -108,6 +110,7 @@ int matlab_csv_serial_main(int argc, char *argv[])
 						 2000,
 						 matlab_csv_serial_thread_main,
 						 (argv) ? (char *const *)&argv[2] : (char *const *)NULL);
+						//(argv) ? (char *const *)&argv[2] : (char *const *)nullptr);by sjj
 		exit(0);
 	}
 
@@ -133,7 +136,7 @@ int matlab_csv_serial_main(int argc, char *argv[])
 
 int matlab_csv_serial_thread_main(int argc, char *argv[])
 {
-
+	PX4_INFO("start thread_main");
 	if (argc < 2) {
 		errx(1, "need a serial port name as argument");
 	}
@@ -144,7 +147,8 @@ int matlab_csv_serial_thread_main(int argc, char *argv[])
 
 	int serial_fd = open(uart_name, O_RDWR | O_NOCTTY);
 
-	unsigned speed = 921600;
+	//unsigned speed = 921600;
+	unsigned speed = 57600;
 
 	if (serial_fd < 0) {
 		err(1, "failed to open port: %s", uart_name);
@@ -183,49 +187,75 @@ int matlab_csv_serial_thread_main(int argc, char *argv[])
 	}
 
 	/* subscribe to vehicle status, attitude, sensors and flow*/
-	struct accel_report accel0;
+	/*struct accel_report accel0;
 	struct accel_report accel1;
 	struct gyro_report gyro0;
-	struct gyro_report gyro1;
+	struct gyro_report gyro1;*/
+	
 
 	/* subscribe to parameter changes */
-	int accel0_sub = orb_subscribe_multi(ORB_ID(sensor_accel), 0);
+	/*int accel0_sub = orb_subscribe_multi(ORB_ID(sensor_accel), 0);
 	int accel1_sub = orb_subscribe_multi(ORB_ID(sensor_accel), 1);
 	int gyro0_sub = orb_subscribe_multi(ORB_ID(sensor_gyro), 0);
-	int gyro1_sub = orb_subscribe_multi(ORB_ID(sensor_gyro), 1);
+	int gyro1_sub = orb_subscribe_multi(ORB_ID(sensor_gyro), 1);*/
+	int vLocalPos_sub_fd= orb_subscribe(ORB_ID(vehicle_local_position));//by sjj
+	/* limit the update rate to 5 Hz */
+	//orb_set_interval(vLocalPos_sub_fd, 100);//need to test no limited sjj
 
 	thread_running = true;
 
 	while (!thread_should_exit) {
-
+		PX4_INFO("true");
 		/*This runs at the rate of the sensors */
 		struct pollfd fds[] = {
-			{ .fd = accel0_sub, .events = POLLIN }
+			{ .fd = vLocalPos_sub_fd, .events = POLLIN }
 		};
 
 		/* wait for a sensor update, check for exit condition every 500 ms */
 		int ret = poll(fds, sizeof(fds) / sizeof(fds[0]), 500);
-
+		
+		
+		//by sjj
 		if (ret < 0) {
 			/* poll error, ignore */
+			
 
 		} else if (ret == 0) {
 			/* no return value, ignore */
 			warnx("no sensor data");
-
+			
 		} else {
 
 			/* accel0 update available? */
 			if (fds[0].revents & POLLIN) {
+				/*
 				orb_copy(ORB_ID(sensor_accel), accel0_sub, &accel0);
 				orb_copy(ORB_ID(sensor_accel), accel1_sub, &accel1);
 				orb_copy(ORB_ID(sensor_gyro), gyro0_sub, &gyro0);
-				orb_copy(ORB_ID(sensor_gyro), gyro1_sub, &gyro1);
-
+				orb_copy(ORB_ID(sensor_gyro), gyro1_sub, &gyro1);*/
+				
 				// write out on accel 0, but collect for all other sensors as they have updates
-				dprintf(serial_fd, "%llu,%d,%d,%d,%d,%d,%d\n", accel0.timestamp, (int)accel0.x_raw, (int)accel0.y_raw,
+				/*dprintf(serial_fd, "%llu,%d,%d,%d,%d,%d,%d,", accel0.timestamp, (int)accel0.x_raw, (int)accel0.y_raw,
 					(int)accel0.z_raw,
 					(int)accel1.x_raw, (int)accel1.y_raw, (int)accel1.z_raw);
+				dprintf(serial_fd,"%llu,%d,%d,%d,%d,%d,%d\r\n", gyro0.timestamp, (int)gyro0.x_raw, (int)gyro0.y_raw,
+					(int)gyro0.z_raw,
+					(int)gyro1.x_raw, (int)gyro1.y_raw, (int)gyro1.z_raw);*/
+				
+				  //创建定位数据内存块
+                struct vehicle_local_position_s vlps;
+                //copy 数据到内存vlps
+                orb_copy(ORB_ID(vehicle_local_position),vLocalPos_sub_fd,&vlps);
+                /*PX4_INFO("local_POS:%llu,\t%8.4f\t%8.4f\t%8.4f\n",
+                       vlps.timestamp,
+                       (double)vlps.x,
+                       (double)vlps.y,
+                       (double)vlps.z);*/
+		dprintf(serial_fd, "pos,%llu,%.4f,%.4f,%.4f\r\n",
+			vlps.timestamp,
+                       	(double)vlps.x,
+                       	(double)vlps.y,
+                       	(double)vlps.z);
 			}
 
 		}
