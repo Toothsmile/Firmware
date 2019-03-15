@@ -711,7 +711,8 @@ GPS::run()
 			 * MTK driver is not well tested, so we really only trust the UBX
 			 * driver for an advance publication
 			 */
-            if (_helper && _helper->configure(_baudrate, GPSHelper::OutputMode::GPS) == 0) {//config 设置波特率与输出
+
+            if (_helper && _helper->configure(_baudrate, GPSHelper::OutputMode::GPS) == 0) {//这个应该就是握手检验的过程，config 设置波特率与输出
 
 				/* reset report */
 				memset(&_report_gps_pos, 0, sizeof(_report_gps_pos));
