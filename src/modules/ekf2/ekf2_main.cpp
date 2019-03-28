@@ -425,7 +425,7 @@ Ekf2::Ekf2():
 	_terrain_p_noise(_params->terrain_p_noise),
 	_terrain_gradient(_params->terrain_gradient),
 	_gps_vel_noise(_params->gps_vel_noise),
-	_gps_pos_noise(_params->gps_pos_noise),
+    _gps_pos_noise(_params->gps_pos_noise),
 	_pos_noaid_noise(_params->pos_noaid_noise),
 	_baro_noise(_params->baro_noise),
 	_baro_innov_gate(_params->baro_innov_gate),
@@ -506,7 +506,7 @@ Ekf2::Ekf2():
 	_magnetometer_sub = orb_subscribe(ORB_ID(vehicle_magnetometer));
 	_optical_flow_sub = orb_subscribe(ORB_ID(optical_flow));
 	_params_sub = orb_subscribe(ORB_ID(parameter_update));
-	_sensor_selection_sub = orb_subscribe(ORB_ID(sensor_selection));
+    _sensor_selection_sub = orb_subscribe(ORB_ID(sensor_selection));//以后需要查看下这个投票机制
 	_sensors_sub = orb_subscribe(ORB_ID(sensor_combined));
 	_status_sub = orb_subscribe(ORB_ID(vehicle_status));
 	_vehicle_land_detected_sub = orb_subscribe(ORB_ID(vehicle_land_detected));
@@ -588,6 +588,7 @@ void Ekf2::run()
 		int ret = px4_poll(fds, sizeof(fds) / sizeof(fds[0]), 1000);
 
 		if (!(fds[0].revents & POLLIN)) {
+
 			// no new data
 			continue;
 		}
@@ -668,7 +669,7 @@ void Ekf2::run()
 
 		// attempt reset until successful
 		if (imu_bias_reset_request) {
-			imu_bias_reset_request = !_ekf.reset_imu_bias();
+            imu_bias_reset_request = !_ekf.reset_imu_bias();//如果需要重置，需要重新去参数表中获取传感器的偏差参数
 		}
 
 		// in replay mode we are getting the actual timestamp from the sensor topic
@@ -684,13 +685,13 @@ void Ekf2::run()
 		// push imu data into estimator
 		float gyro_integral[3];
 		float gyro_dt = sensors.gyro_integral_dt / 1.e6f;
-		gyro_integral[0] = sensors.gyro_rad[0] * gyro_dt;
+        gyro_integral[0] = sensors.gyro_rad[0] * gyro_dt;//积分值
 		gyro_integral[1] = sensors.gyro_rad[1] * gyro_dt;
 		gyro_integral[2] = sensors.gyro_rad[2] * gyro_dt;
 
 		float accel_integral[3];
 		float accel_dt = sensors.accelerometer_integral_dt / 1.e6f;
-		accel_integral[0] = sensors.accelerometer_m_s2[0] * accel_dt;
+        accel_integral[0] = sensors.accelerometer_m_s2[0] * accel_dt;//积分值啊
 		accel_integral[1] = sensors.accelerometer_m_s2[1] * accel_dt;
 		accel_integral[2] = sensors.accelerometer_m_s2[2] * accel_dt;
 
@@ -715,7 +716,7 @@ void Ekf2::run()
 
 				} else {
 					if (_invalid_mag_id_count > 0) {
-						_invalid_mag_id_count--;
+                         _invalid_mag_id_count--;
 					}
 				}
 
@@ -723,9 +724,9 @@ void Ekf2::run()
 					// the sensor ID used for the last saved mag bias is not confirmed to be the same as the current sensor ID
 					// this means we need to reset the learned bias values to zero
 					_mag_bias_x.set(0.f);
-					_mag_bias_x.commit_no_notification();
-					_mag_bias_y.set(0.f);
-					_mag_bias_y.commit_no_notification();
+                    _mag_bias_x.commit_no_notification();
+                    _mag_bias_y.set(0.f);
+                    _mag_bias_y.commit_no_notification();
 					_mag_bias_z.set(0.f);
 					_mag_bias_z.commit_no_notification();
 					_mag_bias_id.set(sensor_selection.mag_device_id);
@@ -844,6 +845,7 @@ void Ekf2::run()
 				gps_msg.eph = gps.eph;
 				gps_msg.epv = gps.epv;
 				gps_msg.sacc = gps.s_variance_m_s;
+                gps_msg.cog_rad= gps.cog_rad;// by sjj add yaw by double rtk annta
 				gps_msg.vel_m_s = gps.vel_m_s;
 				gps_msg.vel_ned[0] = gps.vel_n_m_s;
 				gps_msg.vel_ned[1] = gps.vel_e_m_s;
@@ -1011,7 +1013,7 @@ void Ekf2::run()
 		}
 
 		// run the EKF update and output
-		const bool updated = _ekf.update();
+        const bool updated = _ekf.update();//这个是ekf2的主函数
 
 		if (updated) {
 

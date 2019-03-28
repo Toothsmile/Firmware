@@ -425,8 +425,10 @@ then
 		if ver hwcmp PX4_SAME70XPLAINED_V1
 		then
 			gps start -d /dev/ttyS2
+#			gps start -d /dev/ttyS6
 		else
 			gps start
+#			gps start -d /dev/ttyS6
 		fi
 		sh /etc/init.d/rc.sensors
 		commander start
@@ -1000,5 +1002,7 @@ unset TUNE_ERR
 mavlink boot_complete
 
 #by sjj
+usleep 20000000
 gps stop
+usleep 10000000
 gps start -d /dev/ttyS6
