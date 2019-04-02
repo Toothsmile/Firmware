@@ -1266,3 +1266,12 @@ PARAM_DEFINE_FLOAT(EKF2_ABL_GYRLIM, 3.0f);
  * @decimal 2
  */
 PARAM_DEFINE_FLOAT(EKF2_ABL_TAU, 0.5f);
+
+/**
+ *custom param sjj
+ *
+ * @group EKF2
+ * @min 0
+ * @max 1
+ */
+PARAM_DEFINE_INT32(EKF2_GPS_YAW,1);

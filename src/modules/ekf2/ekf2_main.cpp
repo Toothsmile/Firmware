@@ -396,7 +396,7 @@ private:
 		(ParamFloat<px4::params::EKF2_PCOEF_Y>)
 		_K_pstatic_coef_y,	///< static pressure position error coefficient along the Y body axis
 		(ParamFloat<px4::params::EKF2_PCOEF_Z>)
-		_K_pstatic_coef_z	///< static pressure position error coefficient along the Z body axis
+        _K_pstatic_coef_z	///< static pressure position error coefficient along the Z body axis
 	)
 
 };
@@ -836,7 +836,7 @@ void Ekf2::run()
 			vehicle_gps_position_s gps;
 
 			if (orb_copy(ORB_ID(vehicle_gps_position), _gps_sub, &gps) == PX4_OK) {
-				struct gps_message gps_msg;
+                struct  gps_message gps_msg;
 				gps_msg.time_usec = gps.timestamp;
 				gps_msg.lat = gps.lat;
 				gps_msg.lon = gps.lon;
@@ -844,8 +844,10 @@ void Ekf2::run()
 				gps_msg.fix_type = gps.fix_type;
 				gps_msg.eph = gps.eph;
 				gps_msg.epv = gps.epv;
-				gps_msg.sacc = gps.s_variance_m_s;
-                gps_msg.cog_rad= gps.cog_rad;// by sjj add yaw by double rtk annta
+                gps_msg.sacc = gps.s_variance_m_s;//需要于老师输出 by sjj
+                gps_msg.yaw= gps.cog_rad-float(M_PI);// -pi transform to yaw[-pi,pi] add yaw by double rtk annta by sjj
+                gps_msg.yaw_offset=0.0f;// set gps yaw offset=0 by sjj
+
 				gps_msg.vel_m_s = gps.vel_m_s;
 				gps_msg.vel_ned[0] = gps.vel_n_m_s;
 				gps_msg.vel_ned[1] = gps.vel_e_m_s;
@@ -855,7 +857,8 @@ void Ekf2::run()
 				//TODO: add gdop to gps topic
 				gps_msg.gdop = 0.0f;
 
-				_ekf.setGpsData(gps.timestamp, &gps_msg);
+                _ekf.setGpsData(gps.timestamp, &gps_msg);
+                //_ekf.setGpsData(gps.timestamp, gps_msg); // by sjj 后续需要打印数据查看下
 
 				ekf2_timestamps.gps_timestamp_rel = (int16_t)((int64_t)gps.timestamp / 100 - (int64_t)ekf2_timestamps.timestamp / 100);
 			}
