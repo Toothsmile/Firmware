@@ -1025,7 +1025,7 @@ void Ekf2::run()
 				_gps_alttitude_ellipsoid[1] = gps.alt_ellipsoid;
 			}
 		}
-
+     //PX4_INFO("gps_blend_mask,%d,gps2_updated,%d,gps1_updated,%d",_gps_blend_mask.get(),gps2_updated,gps1_updated);//by sjj
 		if ((_gps_blend_mask.get() == 0) && gps1_updated) {
 			// When GPS blending is disabled we always use the first receiver instance
 			_ekf.setGpsData(_gps_state[0].time_usec, &_gps_state[0]);
@@ -1035,6 +1035,7 @@ void Ekf2::run()
 
 			// calculate blending weights
 			if (!blend_gps_data()) {
+                PX4_INFO("1%d,2%d",_gps_state[0].fix_type,_gps_state[1].fix_type);
 				// handle case where the blended states cannot be updated
 				if (_gps_state[0].fix_type > _gps_state[1].fix_type) {
 					// GPS 1 has the best fix status so use that

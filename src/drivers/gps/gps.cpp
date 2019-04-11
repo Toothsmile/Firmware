@@ -920,7 +920,8 @@ GPS::print_status()
 void
 GPS::publish()
 {
-	if (_instance == Instance::Main || _is_gps_main_advertised) {
+    //if (_instance == Instance::Main || _is_gps_main_advertised) {
+    if (_instance == Instance::Main||_instance == Instance::Secondary || _is_gps_main_advertised) {
 		orb_publish_auto(ORB_ID(vehicle_gps_position), &_report_gps_pos_pub, &_report_gps_pos, &_gps_orb_instance,
 				 ORB_PRIO_DEFAULT);
 		// Heading/yaw data can be updated at a lower rate than the other navigation data.
@@ -1049,7 +1050,7 @@ GPS *GPS::instantiate(int argc, char *argv[])
 
 GPS *GPS::instantiate(int argc, char *argv[], Instance instance)
 {
-	const char *device_name = "/dev/ttyS3";
+    const char *device_name = "/dev/ttyS3";
     //const char *device_name_secondary = nullptr;
     const char *device_name_secondary = "/dev/ttyS6";//by sjj
 	int baudrate_main = 0;
@@ -1057,7 +1058,7 @@ GPS *GPS::instantiate(int argc, char *argv[], Instance instance)
 	bool fake_gps = false;
 	bool enable_sat_info = false;
 	GPSHelper::Interface interface = GPSHelper::Interface::UART;
-	gps_driver_mode_t mode = GPS_DRIVER_MODE_NONE;
+    gps_driver_mode_t mode = GPS_DRIVER_MODE_NONE;
 
 	bool error_flag = false;
 	int myoptind = 1;
