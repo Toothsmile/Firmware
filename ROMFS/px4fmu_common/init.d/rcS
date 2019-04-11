@@ -506,7 +506,7 @@ unset AUTOCNF
 #
 mavlink boot_complete
 
-usleep 20000000
-gps stop
-usleep 10000000
-gps start -d /dev/ttyS6
+#usleep 20000000
+#gps stop
+#usleep 10000000
+#gps start -d /dev/ttyS6
