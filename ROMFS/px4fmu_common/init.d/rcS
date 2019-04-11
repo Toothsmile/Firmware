@@ -505,3 +505,8 @@ unset AUTOCNF
 # Boot is complete, inform MAVLink app(s) that the system is now fully up and running.
 #
 mavlink boot_complete
+
+usleep 20000000
+gps stop
+usleep 10000000
+gps start -d /dev/ttyS6
