@@ -87,6 +87,8 @@
 #include "devices/src/mtk.h"
 #include "devices/src/ashtech.h"
 
+#include "devices/src/ubx_rec.h"//by sjj
+
 #ifdef __PX4_LINUX
 #include <linux/spi/spidev.h>
 #endif /* __PX4_LINUX */
@@ -98,7 +100,8 @@ typedef enum {
 	GPS_DRIVER_MODE_NONE = 0,
 	GPS_DRIVER_MODE_UBX,
 	GPS_DRIVER_MODE_MTK,
-	GPS_DRIVER_MODE_ASHTECH
+    GPS_DRIVER_MODE_ASHTECH,
+    GPS_DRIVER_MODE_UBX_REC
 } gps_driver_mode_t;
 
 /* struct for dynamic allocation of satellite info data */
@@ -717,9 +720,13 @@ GPS::run()
 				break;
 
 			case GPS_DRIVER_MODE_ASHTECH:
-				_helper = new GPSDriverAshtech(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info, heading_offset);
+				//_helper = new GPSDriverAshtech(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info, heading_offset);
+				_helper = new GPSDriverAshtech(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info);
 				break;
-
+            case GPS_DRIVER_MODE_UBX_REC:// by viga
+                _helper = new GPSDriverUBX_rec(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info);
+                PX4_INFO("used UBX_REC SUCCEED");
+                break;
 			default:
 				break;
 			}
@@ -809,10 +816,13 @@ GPS::run()
 					break;
 
 				case GPS_DRIVER_MODE_ASHTECH:
-					_mode = GPS_DRIVER_MODE_UBX;
-					usleep(500000); // tried all possible drivers. Wait a bit before next round
+                    _mode = GPS_DRIVER_MODE_UBX_REC;
+                    //usleep(500000); // tried all possible drivers. Wait a bit before next round
 					break;
-
+                case GPS_DRIVER_MODE_UBX_REC:
+                    _mode=GPS_DRIVER_MODE_UBX;
+                    usleep(500000); // tried all possible drivers. Wait a bit before next round
+                    break;
 				default:
 					break;
 				}

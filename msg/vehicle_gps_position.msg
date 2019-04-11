@@ -2,6 +2,10 @@
 # the field 'timestamp' is for the position & velocity (microseconds)
 uint64 timestamp		# time since system start (microseconds)
 
+uint32 pos_itow			#add by sjj
+int32 fix_quality		#add by sjj,dont know why need this 
+uint32 sacc			#add by sjj,for heading flag
+
 int32 lat			# Latitude in 1E-7 degrees
 int32 lon			# Longitude in 1E-7 degrees
 int32 alt			# Altitude in 1E-3 meters above MSL, (millimetres)
