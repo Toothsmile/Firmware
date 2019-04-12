@@ -740,7 +740,7 @@ GPS::run()
 				_report_gps_pos.heading = NAN;
 				_report_gps_pos.heading_offset = heading_offset;
 
-				if (_mode == GPS_DRIVER_MODE_UBX) {
+                if (_mode == GPS_DRIVER_MODE_UBX_REC) {
 
 					/* GPS is obviously detected successfully, reset statistics */
 					_helper->resetUpdateRates();
