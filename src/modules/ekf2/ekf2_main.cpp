@@ -977,10 +977,12 @@ void Ekf2::run()
                 //_gps_state[0].yaw = gps.heading;
                 _gps_state[0].yaw=gps.cog_rad;//by sjj
 				_gps_state[0].yaw_offset = gps.heading_offset;
+                _gps_state[0].yaw_flag=gps.sacc;//by sjj
 				_gps_state[0].fix_type = gps.fix_type;
 				_gps_state[0].eph = gps.eph;
 				_gps_state[0].epv = gps.epv;
-                _gps_state[0].sacc = gps.s_variance_m_s;//需要让于老师输出这个信息
+                //_gps_state[0].sacc = gps.s_variance_m_s;//需要让于老师输出这个信息
+                _gps_state[0].sacc = gps.eph;
 				_gps_state[0].vel_m_s = gps.vel_m_s;
 				_gps_state[0].vel_ned[0] = gps.vel_n_m_s;
 				_gps_state[0].vel_ned[1] = gps.vel_e_m_s;
@@ -1010,10 +1012,12 @@ void Ekf2::run()
                 //_gps_state[1].yaw = gps.heading;
                 _gps_state[1].yaw=gps.cog_rad;//by sjj
 				_gps_state[1].yaw_offset = gps.heading_offset;
+                _gps_state[1].yaw_flag=gps.sacc;//by sjj
 				_gps_state[1].fix_type = gps.fix_type;
 				_gps_state[1].eph = gps.eph;
 				_gps_state[1].epv = gps.epv;
-				_gps_state[1].sacc = gps.s_variance_m_s;
+                //_gps_state[1].sacc = gps.s_variance_m_s;//by sjj
+                _gps_state[1].sacc = gps.eph;
 				_gps_state[1].vel_m_s = gps.vel_m_s;
 				_gps_state[1].vel_ned[0] = gps.vel_n_m_s;
 				_gps_state[1].vel_ned[1] = gps.vel_e_m_s;
