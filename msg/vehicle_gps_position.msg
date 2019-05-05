@@ -5,6 +5,10 @@ int32 lon			# Longitude in 1E-7 degrees
 int32 alt			# Altitude in 1E-3 meters above MSL, (millimetres)
 int32 alt_ellipsoid 		# Altitude in 1E-3 meters bove Ellipsoid, (millimetres)
 
+uint32 pos_itow			# add by sjj
+int32 fix_quality 		# add by sjj
+uint32 sacc			# add by sjj heading flag
+
 float32 s_variance_m_s		# GPS speed accuracy estimate, (metres/sec)
 float32 c_variance_rad		# GPS course accuracy estimate, (radians) 
 uint8 fix_type # 0-1: no fix, 2: 2D fix, 3: 3D fix, 4: RTCM code differential, 5: Real-Time Kinematic, float, 6: Real-Time Kinematic, fixed, 8: Extrapolated. Some applications will not use the value of this field unless it is at least two, so always correctly fill in the fix.   
@@ -29,3 +33,5 @@ int32 timestamp_time_relative	# timestamp + timestamp_time_relative = Time of th
 uint64 time_utc_usec		# Timestamp (microseconds, UTC), this is the timestamp which comes from the gps module. It might be unavailable right after cold start, indicated by a value of 0 
 
 uint8 satellites_used		# Number of satellites used 
+
+
