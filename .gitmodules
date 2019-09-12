@@ -41,7 +41,7 @@
 [submodule "src/drivers/gps/devices"]
 	path = src/drivers/gps/devices
 	url = https://github.com/Toothsmile/GpsDrivers.git
-	branch = add_gps_ubx_rec_v1.9.0
+	branch = v1.8.2_rtk_v2_ubxCPP
 [submodule "src/modules/micrortps_bridge/micro-CDR"]
 	path = src/modules/micrortps_bridge/micro-CDR
 	url = https://github.com/eProsima/micro-CDR.git
