@@ -803,12 +803,12 @@ int calibrate_cancel_subscribe()
 	if (vehicle_command_sub >= 0) {
 		// make sure we won't read any old messages
 		struct vehicle_command_s cmd;
-		bool update;
-		while (orb_check(vehicle_command_sub, &update) == 0 && update) {
-			orb_copy(ORB_ID(vehicle_command), vehicle_command_sub, &cmd);
+        bool update;//默认都是false
+        while (orb_check(vehicle_command_sub, &update) == 0 && update) {//一直循环直到有命令
+            orb_copy(ORB_ID(vehicle_command), vehicle_command_sub, &cmd);//赋值命令
 		}
 	}
-	return vehicle_command_sub;
+    return vehicle_command_sub;//传回句柄？
 }
 
 void calibrate_cancel_unsubscribe(int cmd_sub)
@@ -819,11 +819,11 @@ void calibrate_cancel_unsubscribe(int cmd_sub)
 static void calibrate_answer_command(orb_advert_t *mavlink_log_pub, struct vehicle_command_s &cmd, unsigned result)
 {
 	switch (result) {
-	case vehicle_command_s::VEHICLE_CMD_RESULT_ACCEPTED:
-		tune_positive(true);
+    case vehicle_command_s::VEHICLE_CMD_RESULT_ACCEPTED://命令被接受的话，返回积极的灯指示也就是绿色快闪的那个
+        tune_positive(true);
 		break;
 
-	case vehicle_command_s::VEHICLE_CMD_RESULT_DENIED:
+    case vehicle_command_s::VEHICLE_CMD_RESULT_DENIED://如果不被接受就提示消极的闪烁，并输出日志
 		mavlink_log_critical(mavlink_log_pub, "command denied during calibration: %u", cmd.command);
 		tune_negative(true);
 		break;
@@ -833,19 +833,25 @@ static void calibrate_answer_command(orb_advert_t *mavlink_log_pub, struct vehic
 	}
 }
 
+///
+/// \brief calibrate_cancel_check:判断命令是否被接受，并做出响应（指示灯，蜂鸣器）
+/// \param mavlink_log_pub：日志记录
+/// \param cancel_sub：命令订阅的句柄
+/// \return
+///
 bool calibrate_cancel_check(orb_advert_t *mavlink_log_pub, int cancel_sub)
 {
-	px4_pollfd_struct_t fds[1];
-	fds[0].fd = cancel_sub;
+    px4_pollfd_struct_t fds[1];
+    fds[0].fd = cancel_sub;//飞控有命令的句柄
 	fds[0].events = POLLIN;
 
 	if (px4_poll(&fds[0], 1, 0) > 0) {
 		struct vehicle_command_s cmd;
 
-		orb_copy(ORB_ID(vehicle_command), cancel_sub, &cmd);
+        orb_copy(ORB_ID(vehicle_command), cancel_sub, &cmd);//提取出命令
 
 		// ignore internal commands, such as VEHICLE_CMD_DO_MOUNT_CONTROL from vmount
-		if (cmd.from_external) {
+        if (cmd.from_external) {//忽略内部命令 进行命令判断是否是飞行前较正
 			if (cmd.command == vehicle_command_s::VEHICLE_CMD_PREFLIGHT_CALIBRATION &&
 					(int)cmd.param1 == 0 &&
 					(int)cmd.param2 == 0 &&
@@ -853,7 +859,7 @@ bool calibrate_cancel_check(orb_advert_t *mavlink_log_pub, int cancel_sub)
 					(int)cmd.param4 == 0 &&
 					(int)cmd.param5 == 0 &&
 					(int)cmd.param6 == 0) {
-				calibrate_answer_command(mavlink_log_pub, cmd, vehicle_command_s::VEHICLE_CMD_RESULT_ACCEPTED);
+                calibrate_answer_command(mavlink_log_pub, cmd, vehicle_command_s::VEHICLE_CMD_RESULT_ACCEPTED);//判断命令是否被接受，并提示
 				mavlink_log_critical(mavlink_log_pub, CAL_QGC_CANCELLED_MSG);
 				return true;
 
